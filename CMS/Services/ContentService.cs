@@ -40,6 +40,15 @@ namespace CMS.Services
                 throw new InvalidOperationException($"WebPageId {content.WebPageId} does not exist.");
             }
 
+            // Determine the current max Order for this WebPageId
+            var maxOrder = await context.Contents
+                .Where(c => c.WebPageId == content.WebPageId)
+                .MaxAsync(c => (int?)c.Order) ?? 0;
+
+            // Set the Order of the new content
+            content.Order = maxOrder + 1;
+
+            // Add the content with the new Order value
             context.Contents.Add(content);
 
             try
@@ -52,6 +61,7 @@ namespace CMS.Services
                 throw;
             }
         }
+
 
         // Method to update existing content in the database
         public async Task UpdateContentAsync(Content content)
