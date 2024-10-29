@@ -6,19 +6,58 @@
 
 <h3>DragAndDropContents</h3>
 
-<SortableList TItem="Content" Data="Contents" Context="contentItem">
+<SortableList TItem="Content" Data="Contents" Context="contentItem" OnUpdate="@OnContentListUpdate">
     <ItemTemplate>
-            @contentItem.ContentJson
+        @contentItem.ContentName
     </ItemTemplate>
 </SortableList>
 
-
 @code {
+    [SupplyParameterFromQuery]
+    public int? WebPageId { get; set; }
+
     private List<Content> Contents = new List<Content>();
 
     protected override async Task OnInitializedAsync()
     {
-        Contents = await ContentService.GetAllContentsAsync();
+        if (WebPageId.HasValue)
+        {
+            Contents = await ContentService.GetContentsByWebPageIdAsync(WebPageId.Value);
+        }
     }
 
+    // Update the signature to remove the generic type parameter
+    private async Task OnContentListUpdate(SortableListEventArgs args)
+    {
+        // Extract the item being moved
+        var itemToMove = Contents[args.OldIndex];
+
+        // Remove the item from the old position
+        Contents.RemoveAt(args.OldIndex);
+
+        // Insert the item at the new position
+        if (args.NewIndex < Contents.Count)
+        {
+            Contents.Insert(args.NewIndex, itemToMove);
+        }
+        else
+        {
+            Contents.Add(itemToMove);
+        }
+
+        // Update the order for the database
+        await UpdateContentOrderInDatabase();
+    }
+
+    private async Task UpdateContentOrderInDatabase()
+    {
+        // Update the order property for each content item
+        for (int i = 0; i < Contents.Count; i++)
+        {
+            Contents[i].Order = i; // Update the Order property based on the current index
+        }
+
+        // Save the updated order to the database
+        await ContentService.UpdateContentOrderAsync(Contents);
+    }
 }

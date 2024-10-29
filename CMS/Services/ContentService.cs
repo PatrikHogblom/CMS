@@ -28,6 +28,17 @@ namespace CMS.Services
             return await context.Contents.ToListAsync();
         }
 
+        public async Task<List<Content>> GetContentsByWebPageIdAsync(int webPageId)
+        {
+            await using var context = _dbContextFactory.CreateDbContext();
+
+            // Fetching the contents for the given WebPageId and ordering them
+            return await context.Contents
+                .Where(c => c.WebPageId == webPageId)
+                .OrderBy(c => c.Order)
+                .ToListAsync();
+        }
+
         // Method to save new content to the database
         public async Task SaveContentAsync(Content content)
         {
@@ -90,7 +101,26 @@ namespace CMS.Services
                 throw;
             }
         }
+        public async Task UpdateContentOrderAsync(List<Content> reorderedContents)
+        {
+            await using var context = _dbContextFactory.CreateDbContext();
 
+            for (int i = 0; i < reorderedContents.Count; i++)
+            {
+                reorderedContents[i].Order = i + 1;  // Set the new order, starting from 1
+                context.Contents.Update(reorderedContents[i]);
+            }
+
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                Console.WriteLine($"Error updating order: {ex.InnerException?.Message}");
+                throw;
+            }
+        }
 
     }
 
