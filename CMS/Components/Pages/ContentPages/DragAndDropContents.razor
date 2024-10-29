@@ -6,9 +6,13 @@
 
 <h3>DragAndDropContents</h3>
 
-<SortableList TItem="Content" Data="Contents" Context="contentItem" OnUpdate="@OnContentListUpdate">
+<SortableList TItem="Content" Data="Contents" Context="contentItem" OnUpdate="OnContentListUpdate">
     <ItemTemplate>
-        @contentItem.ContentName
+        <div>
+            @contentItem.ContentName
+            <!-- Use the @key directive with a unique identifier -->
+            <ContentPreview ContentId="@contentItem.ContentId" @key="contentItem.ContentId" />
+        </div>
     </ItemTemplate>
 </SortableList>
 
@@ -22,20 +26,21 @@
     {
         if (WebPageId.HasValue)
         {
+            // Fetch contents based on the WebPageId
             Contents = await ContentService.GetContentsByWebPageIdAsync(WebPageId.Value);
         }
     }
 
-    // Update the signature to remove the generic type parameter
     private async Task OnContentListUpdate(SortableListEventArgs args)
     {
-        // Extract the item being moved
-        var itemToMove = Contents[args.OldIndex];
+        // Validate indexes
+        if (args.OldIndex < 0 || args.OldIndex >= Contents.Count || args.NewIndex < 0 || args.NewIndex >= Contents.Count)
+            return;
 
-        // Remove the item from the old position
+        // Move the item in the Contents list
+        var itemToMove = Contents[args.OldIndex];
         Contents.RemoveAt(args.OldIndex);
 
-        // Insert the item at the new position
         if (args.NewIndex < Contents.Count)
         {
             Contents.Insert(args.NewIndex, itemToMove);
@@ -45,19 +50,22 @@
             Contents.Add(itemToMove);
         }
 
-        // Update the order for the database
-        await UpdateContentOrderInDatabase();
+        // Update order and save to the database
+        await UpdateContentOrder();
+
+        // Force re-render to reflect updated order visually
+        StateHasChanged();
     }
 
-    private async Task UpdateContentOrderInDatabase()
+    private async Task UpdateContentOrder()
     {
-        // Update the order property for each content item
+        // Set order values based on new list arrangement
         for (int i = 0; i < Contents.Count; i++)
         {
-            Contents[i].Order = i; // Update the Order property based on the current index
+            Contents[i].Order = i; // Assign order index
         }
 
-        // Save the updated order to the database
+        // Save the updated order in the database
         await ContentService.UpdateContentOrderAsync(Contents);
     }
 }
