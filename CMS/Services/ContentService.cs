@@ -22,6 +22,12 @@ namespace CMS.Services
             return await context.Contents.FirstOrDefaultAsync(c => c.ContentId == contentId);
         }
 
+        public async Task<List<Content>> GetAllContentsAsync()
+        {
+            await using var context = _dbContextFactory.CreateDbContext();
+            return await context.Contents.ToListAsync();
+        }
+
         // Method to save new content to the database
         public async Task SaveContentAsync(Content content)
         {
@@ -74,6 +80,8 @@ namespace CMS.Services
                 throw;
             }
         }
+
+
     }
 
 }

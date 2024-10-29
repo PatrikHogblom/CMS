@@ -1,0 +1,24 @@
+﻿@page "/draganddrop"
+@inject IContentService ContentService;
+@using BlazorBootstrap;
+
+@rendermode InteractiveServer
+
+<h3>DragAndDropContents</h3>
+
+<SortableList TItem="Content" Data="Contents" Context="contentItem">
+    <ItemTemplate>
+            @contentItem.ContentJson
+    </ItemTemplate>
+</SortableList>
+
+
+@code {
+    private List<Content> Contents = new List<Content>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Contents = await ContentService.GetAllContentsAsync();
+    }
+
+}
