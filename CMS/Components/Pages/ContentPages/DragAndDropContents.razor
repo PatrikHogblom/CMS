@@ -8,13 +8,18 @@
 
 <SortableList TItem="Content" Data="Contents" Context="contentItem" OnUpdate="OnContentListUpdate">
     <ItemTemplate>
-        <div>
-            @contentItem.ContentName
-            <!-- Use the @key directive with a unique identifier -->
+        <div class="row">
+            <div class="col d-flex justify-content-end">
+                <button class="btn btn-warning">Redigera</button>
+                <button class="btn btn-danger">Ta Bort</button>
+            </div>
+        </div>
+        <div class="row">
             <ContentPreview ContentId="@contentItem.ContentId" @key="contentItem.ContentId" />
         </div>
     </ItemTemplate>
 </SortableList>
+
 
 @code {
     [SupplyParameterFromQuery]
