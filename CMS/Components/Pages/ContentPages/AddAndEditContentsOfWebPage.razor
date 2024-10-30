@@ -6,9 +6,9 @@
 
 @rendermode InteractiveServer
 
-<h3>DragAndDropContents</h3>
+<h3>Redigera Webbsida</h3>
 
-<div class="bg-light d-flex justify-content-center">
+<div class=" d-flex justify-content-center m-2">
     <div class="icon-container">
         <a class="btn overlay-btn-main" href="@($"/webpages/previewpage/{WebPageId}")" aria-label="Förhandgranska webbsida" title="Förhandgranska webbsida">
             <i class="material-icons icon-black">remove_red_eye</i>
@@ -41,9 +41,18 @@
     <ItemTemplate>
         <div class="row">
             <div class="col d-flex justify-content-end">
-                
-                <Button Color="ButtonColor.Warning" @onclick="() => OnShowEditContentModalClick(contentItem.ContentId)">Redigera</Button>
-                <Button Color="ButtonColor.Danger" @onclick="() => OnShowDeleteContentModalClick(contentItem.ContentId)">Delete</Button>
+                <div class="icon-container">
+                    <a class="btn overlay-btn-main" @onclick="() => OnShowEditContentModalClick(contentItem.ContentId)" aria-label="Redigera Innehåll" title="Redigera Innehåll">
+                        <i class="material-icons icon-black">edit_square</i>
+                    </a>
+                    <span class="icon-text">Redigera</span>
+                </div>
+                <div class="icon-container">
+                    <a class="btn overlay-btn-main" @onclick="() => OnShowDeleteContentModalClick(contentItem.ContentId)" aria-label="Ta bort Innehåll" title="Ta bort Innehåll">
+                        <i class="material-icons icon-black">delete_forever</i>
+                    </a>
+                    <span class="icon-text">Ta bort</span>
+                </div>
             </div>
         </div>
         <div class="row">
