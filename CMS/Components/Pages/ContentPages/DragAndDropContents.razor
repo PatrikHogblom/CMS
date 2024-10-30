@@ -13,9 +13,8 @@
         <div class="row">
             <div class="col d-flex justify-content-end">
                 
-                <Button Color="ButtonColor.Primary" @onclick="() => OnShowModalClick(contentItem.ContentId)">Show Modal</Button>
-                <button class="btn btn-warning">Redigera</button>
-                <button class="btn btn-danger">Ta Bort</button>
+                <Button Color="ButtonColor.Warning" @onclick="() => OnShowEditContentModalClick(contentItem.ContentId)">Redigera</Button>
+                <Button Color="ButtonColor.Danger" @onclick="() => OnShowDeleteContentModalClick(contentItem.ContentId)">Delete</Button>
             </div>
         </div>
         <div class="row">
@@ -24,7 +23,8 @@
     </ItemTemplate>
 </SortableList>
 
-<Modal @ref="modal" Title="Edit Content">
+@* edit modal content *@
+<Modal @ref="editcontentmodal" Title="Edit Content">
     <BodyTemplate>
         @if (selectedContentId.HasValue)
         {
@@ -39,8 +39,27 @@
         }
     </BodyTemplate>
     <FooterTemplate>
-        <Button Color="ButtonColor.Secondary" @onclick="OnHideModalClick">Close</Button>
-@*         <Button Color="ButtonColor.Primary">Save changes</Button> *@
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideEditContentModalClick">Close</Button>
+    </FooterTemplate>
+</Modal>
+
+@* delete modal content *@
+<Modal @ref="deletecontentmodal" Title="Delete Content">
+    <BodyTemplate>
+        @if (selectedContentId.HasValue)
+        {
+            <!-- Pass selectedContentId to the EditContent component or any other content editor -->
+            <CascadingValue Value="selectedContentId.Value">
+                <CMS.Components.Pages.ContentPages.Delete />
+            </CascadingValue>
+        }
+        else
+        {
+            <p>No content selected.</p>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideDeleteContentModalClick">Close</Button>
     </FooterTemplate>
 </Modal>
 
@@ -100,17 +119,34 @@
     }
 
     private int? selectedContentId;  // Holds the contentId for the selected item
-    private Modal modal;             // Reference to the modal
+    private Modal editcontentmodal, deletecontentmodal;             // Reference to the modal
 
-    private async Task OnShowModalClick(int contentId)
+    //edit conrtent modal
+    private async Task OnShowEditContentModalClick(int contentId)
     {
         selectedContentId = contentId; // Set selected content ID
-        await modal.ShowAsync();       // Show the modal
+        await editcontentmodal.ShowAsync();       // Show the modal
     }
 
-    private async Task OnHideModalClick()
+    private async Task OnHideEditContentModalClick()
     {
-        await modal.HideAsync();
+        await editcontentmodal.HideAsync();
+        selectedContentId = null;      // Reset selected content ID when modal is closed
+
+        // Force refresh by navigating to the same page
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+    }
+
+    //delete content modal
+    private async Task OnShowDeleteContentModalClick(int contentId)
+    {
+        selectedContentId = contentId; // Set selected content ID
+        await deletecontentmodal.ShowAsync();       // Show the modal
+    }
+
+    private async Task OnHideDeleteContentModalClick()
+    {
+        await deletecontentmodal.HideAsync();
         selectedContentId = null;      // Reset selected content ID when modal is closed
 
         // Force refresh by navigating to the same page
