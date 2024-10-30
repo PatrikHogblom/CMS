@@ -44,6 +44,7 @@ namespace CMS
             builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
             builder.Services.AddScoped<IContentService, ContentService>();
             builder.Services.AddScoped<IWebPageService, WebPageService>();
+            builder.Services.AddScoped<IWebsiteService, WebsiteService>();
 
             builder.Services.AddBlazorBootstrap();
 
