@@ -8,6 +8,8 @@
 
 <h3>DragAndDropContents</h3>
 
+<Button Color="ButtonColor.Success" @onclick="() => OnShowCreateContentModalClick()">Skapa</Button>
+
 <SortableList TItem="Content" Data="Contents" Context="contentItem" OnUpdate="OnContentListUpdate">
     <ItemTemplate>
         <div class="row">
@@ -23,8 +25,20 @@
     </ItemTemplate>
 </SortableList>
 
+@* add modal content *@
+<Modal @ref="createcontentmodal" Title="Skapa Innehåll">
+    <BodyTemplate>
+            <CascadingValue Value="WebPageId">
+                <BlazorComponents.HtmlTemplates.CreateContent />
+            </CascadingValue>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideEditContentModalClick">Close</Button>
+    </FooterTemplate>
+</Modal>
+
 @* edit modal content *@
-<Modal @ref="editcontentmodal" Title="Edit Content">
+<Modal @ref="editcontentmodal" Title="Editera Innehåll">
     <BodyTemplate>
         @if (selectedContentId.HasValue)
         {
@@ -44,7 +58,7 @@
 </Modal>
 
 @* delete modal content *@
-<Modal @ref="deletecontentmodal" Title="Delete Content">
+<Modal @ref="deletecontentmodal" Title="Ta bort innehåll">
     <BodyTemplate>
         @if (selectedContentId.HasValue)
         {
@@ -67,6 +81,7 @@
 
 
 @code {
+
     [SupplyParameterFromQuery]
     public int? WebPageId { get; set; }
 
@@ -119,11 +134,31 @@
     }
 
     private int? selectedContentId;  // Holds the contentId for the selected item
-    private Modal editcontentmodal, deletecontentmodal;             // Reference to the modal
+
+    private Modal createcontentmodal, editcontentmodal, deletecontentmodal;             // Reference to the modal
+
+    //create conrtent modal
+    private async Task OnShowCreateContentModalClick()
+    {
+        //selectedContentId = contentId; // Set selected content ID
+        selectedContentId = null;      // Clear first to trigger re-render
+        await Task.Delay(1);           // Allow UI to process the null reset
+        await createcontentmodal.ShowAsync();       // Show the modal
+    }
+
+    private async Task OnHideCreateContentModalClick()
+    {
+        await createcontentmodal.HideAsync();
+        selectedContentId = null;      // Reset selected content ID when modal is closed
+        // Force refresh by navigating to the same page
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+    }
 
     //edit conrtent modal
     private async Task OnShowEditContentModalClick(int contentId)
     {
+        selectedContentId = null;      // Clear first to trigger re-render
+        await Task.Delay(1);           // Allow UI to process the null reset
         selectedContentId = contentId; // Set selected content ID
         await editcontentmodal.ShowAsync();       // Show the modal
     }
@@ -140,6 +175,8 @@
     //delete content modal
     private async Task OnShowDeleteContentModalClick(int contentId)
     {
+        selectedContentId = null;      // Clear first to trigger re-render
+        await Task.Delay(1);           // Allow UI to process the null reset
         selectedContentId = contentId; // Set selected content ID
         await deletecontentmodal.ShowAsync();       // Show the modal
     }
