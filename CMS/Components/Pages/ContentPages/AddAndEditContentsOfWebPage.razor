@@ -1,0 +1,306 @@
+﻿@page "/contents/addandeditcontents"
+@inject IContentService ContentService;
+@inject IWebsiteService WebsiteService;
+
+@inject NavigationManager NavigationManager
+
+@rendermode InteractiveServer
+
+<h3>Redigera Webbsida</h3>
+
+<div class=" d-flex justify-content-center m-2">
+    <div class="icon-container">
+        <a class="btn overlay-btn-main" href="@($"/webpages/previewpage/{WebPageId}")" aria-label="Förhandgranska webbsida" title="Förhandgranska webbsida">
+            <i class="material-icons icon-black">remove_red_eye</i>
+        </a>
+        <span class="icon-text">Granska</span>
+    </div>
+    <div class="icon-container">
+        <a class="btn overlay-btn-main" @onclick="() => OnShowCreateContentModalClick()" aria-label="Skapa Innehåll" title="Skapa Innehåll">
+            <i class="material-icons icon-black">note_add</i>
+        </a>
+        <span class="icon-text">Skapa</span>
+    </div>
+    <div class="icon-container">
+        <a class="btn overlay-btn-main" @onclick="() => OnShowEditWebPageModalClick()" aria-label="Redigera Webbsida" title="Redigera Webbsida">
+            <i class="material-icons icon-black">edit_square</i>
+        </a>
+        <span class="icon-text">Redigera</span>
+    </div>
+
+    <div class="icon-container">
+        <a class="btn overlay-btn-main" href="@($"webpages?websiteid={WebSiteId}")" aria-label="Tillbaka till webbsajt" title="Tillbaka till webbsajt">
+            <i class="fa fa-mail-reply fa-2x" aria-hidden="true"></i>
+        </a>
+        <span class="icon-text">Tillbaka</span>
+    </div>
+</div>
+
+
+<SortableList TItem="Content" Data="Contents" Context="contentItem" OnUpdate="OnContentListUpdate">
+    <ItemTemplate>
+        <div class="row">
+            <div class="col d-flex justify-content-end">
+                <div class="icon-container">
+                    <a class="btn overlay-btn-main" @onclick="() => OnShowEditContentModalClick(contentItem.ContentId)" aria-label="Redigera Innehåll" title="Redigera Innehåll">
+                        <i class="material-icons icon-black">edit_square</i>
+                    </a>
+                    <span class="icon-text">Redigera</span>
+                </div>
+                <div class="icon-container">
+                    <a class="btn overlay-btn-main" @onclick="() => OnShowDeleteContentModalClick(contentItem.ContentId)" aria-label="Ta bort Innehåll" title="Ta bort Innehåll">
+                        <i class="material-icons icon-black">delete_forever</i>
+                    </a>
+                    <span class="icon-text">Ta bort</span>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <ContentPreview ContentId="@contentItem.ContentId" @key="contentItem.ContentId" />
+        </div>
+    </ItemTemplate>
+</SortableList>
+
+@* add modal content *@
+<Modal @ref="createcontentmodal" Title="Skapa Innehåll">
+    <BodyTemplate>
+            <CascadingValue Value="WebPageId">
+                <BlazorComponents.HtmlTemplates.CreateContent />
+            </CascadingValue>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideCreateContentModalClick">Close</Button>
+    </FooterTemplate>
+</Modal>
+
+@* edit webpage modal *@
+<Modal @ref="editwebpagemodal" Title="Redigera Webbsida">
+    <BodyTemplate>
+        <CascadingValue Value="WebPageId">
+            <CMS.Components.Pages.WebPages.Edit />
+        </CascadingValue>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideEditWebPageModalClick">Close</Button>
+    </FooterTemplate>
+</Modal>
+
+@* edit modal content *@
+<Modal @ref="editcontentmodal" Title="Editera Innehåll">
+    <BodyTemplate>
+        @if (selectedContentId.HasValue)
+        {
+            <!-- Pass selectedContentId to the EditContent component or any other content editor -->
+            <CascadingValue Value="selectedContentId.Value">
+                <BlazorComponents.HtmlTemplates.EditContent/>
+            </CascadingValue>
+        }
+        else
+        {
+            <p>No content selected.</p>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideEditContentModalClick">Close</Button>
+    </FooterTemplate>
+</Modal>
+
+@* delete modal content *@
+<Modal @ref="deletecontentmodal" Title="Ta bort innehåll">
+    <BodyTemplate>
+        @if (selectedContentId.HasValue)
+        {
+            <!-- Pass selectedContentId to the EditContent component or any other content editor -->
+            <CascadingValue Value="selectedContentId.Value">
+                <CMS.Components.Pages.ContentPages.Delete />
+            </CascadingValue>
+        }
+        else
+        {
+            <p>No content selected.</p>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideDeleteContentModalClick">Close</Button>
+    </FooterTemplate>
+</Modal>
+
+@code {
+
+    [SupplyParameterFromQuery]
+    public int? WebPageId { get; set; }
+
+    private int? WebSiteId { get; set; }
+
+    private List<Content> Contents = new List<Content>();
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        if (WebPageId.HasValue)
+        {
+            // Fetch contents based on the WebPageId
+            Contents = await ContentService.GetContentsByWebPageIdAsync(WebPageId.Value);
+
+            //fetch the websiteid by webapageid
+            WebSiteId = await WebsiteService.GetWebsiteIdByWebPageIdAsync(WebPageId.Value);
+        }
+    }
+
+    private async Task OnContentListUpdate(SortableListEventArgs args)
+    {
+        // Validate indexes
+        if (args.OldIndex < 0 || args.OldIndex >= Contents.Count || args.NewIndex < 0 || args.NewIndex >= Contents.Count)
+            return;
+
+        // Move the item in the Contents list
+        var itemToMove = Contents[args.OldIndex];
+        Contents.RemoveAt(args.OldIndex);
+
+        if (args.NewIndex < Contents.Count)
+        {
+            Contents.Insert(args.NewIndex, itemToMove);
+        }
+        else
+        {
+            Contents.Add(itemToMove);
+        }
+
+        // Update order and save to the database
+        await UpdateContentOrder();
+        StateHasChanged();
+    }
+
+    private async Task UpdateContentOrder()
+    {
+        // Set order values based on new list arrangement
+        for (int i = 0; i < Contents.Count; i++)
+        {
+            Contents[i].Order = i; // Assign order index
+        }
+
+        // Save the updated order in the database
+        await ContentService.UpdateContentOrderAsync(Contents);
+        StateHasChanged();
+    }
+
+    private int? selectedContentId;  // Holds the contentId for the selected item
+
+    private Modal createcontentmodal, editwebpagemodal, editcontentmodal, deletecontentmodal;             // Reference to the modal
+
+    //create conrtent modal
+    private async Task OnShowCreateContentModalClick()
+    {
+        //selectedContentId = contentId; // Set selected content ID
+        selectedContentId = null;      // Clear first to trigger re-render
+        await Task.Delay(1);           // Allow UI to process the null reset
+        await createcontentmodal.ShowAsync();       // Show the modal
+    }
+
+    private async Task OnHideCreateContentModalClick()
+    {
+        await createcontentmodal.HideAsync();
+        selectedContentId = null;      // Reset selected content ID when modal is closed
+        // Force refresh by navigating to the same page
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+    }
+
+    //edit webpage modal
+    private async Task OnShowEditWebPageModalClick()
+    {
+        //selectedContentId = contentId; // Set selected content ID
+        selectedContentId = null;      // Clear first to trigger re-render
+        await Task.Delay(1);           // Allow UI to process the null reset
+        await editwebpagemodal.ShowAsync();       // Show the modal
+    }
+
+    private async Task OnHideEditWebPageModalClick()
+    {
+        await editwebpagemodal.HideAsync();
+        selectedContentId = null;      // Reset selected content ID when modal is closed
+                                       // Force refresh by navigating to the same page
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+    }
+
+    //edit conrtent modal
+    private async Task OnShowEditContentModalClick(int contentId)
+    {
+        selectedContentId = null;      // Clear first to trigger re-render
+        await Task.Delay(1);           // Allow UI to process the null reset
+        selectedContentId = contentId; // Set selected content ID
+        await editcontentmodal.ShowAsync();       // Show the modal
+    }
+
+    private async Task OnHideEditContentModalClick()
+    {
+        await editcontentmodal.HideAsync();
+        selectedContentId = null;      // Reset selected content ID when modal is closed
+
+        // Force refresh by navigating to the same page
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+    }
+
+    //delete content modal
+    private async Task OnShowDeleteContentModalClick(int contentId)
+    {
+        selectedContentId = null;      // Clear first to trigger re-render
+        await Task.Delay(1);           // Allow UI to process the null reset
+        selectedContentId = contentId; // Set selected content ID
+        await deletecontentmodal.ShowAsync();       // Show the modal
+    }
+
+    private async Task OnHideDeleteContentModalClick()
+    {
+        await deletecontentmodal.HideAsync();
+        selectedContentId = null;      // Reset selected content ID when modal is closed
+
+        // Force refresh by navigating to the same page
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+    }
+
+}
+
+<style>
+    .icon-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 2px;
+    }
+
+    .icon-text {
+        font-size: 0.7em;
+        text-align: center;
+        margin-top: 0px;
+        /*background-color: white;*/
+        border-color: black;
+        border-width: 1px !important;
+        /*border: solid;*/
+        border-radius: 10%;
+        padding: 1px;
+    }
+
+    .overlay-btn-main {
+        background-color: rgba(255, 255, 255, 0.4);
+        color: black;
+        border: 2px solid #000000;
+        border-radius: 20%;
+        padding: 5px;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 5px;
+    }
+
+        /* Optional: Hover effect for buttons */
+        .overlay-btn-edit:hover, .overlay-btn-delete:hover, .overlay-btn-main:hover {
+            background-color: lightgray;
+        }
+
+    .btn {
+        font-size: 14px; /* Smaller font /
+        padding: 5px 1px; / Smaller padding */
+    }
+</style>

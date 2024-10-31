@@ -57,7 +57,7 @@ else
         using var dbContext = DbContextFactory.CreateDbContext();
 
         contentList = await dbContext.Contents
-                                     .Where(c => c.WebPageId == WebPageId)
+                                     .Where(c => c.WebPageId == WebPageId).OrderBy(o => o.Order)
                                      .ToListAsync();
 
         // Get the WebSiteId associated with this WebPage

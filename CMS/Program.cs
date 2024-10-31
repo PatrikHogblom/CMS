@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Http;
 
+using BlazorBootstrap;
+
 
 namespace CMS
 {
@@ -42,6 +44,10 @@ namespace CMS
             builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
             builder.Services.AddScoped<IContentService, ContentService>();
             builder.Services.AddScoped<IWebPageService, WebPageService>();
+            builder.Services.AddScoped<IWebsiteService, WebsiteService>();
+
+            builder.Services.AddBlazorBootstrap();
+
             builder.Services.AddAuthentication(options =>
                 {
                     options.DefaultScheme = IdentityConstants.ApplicationScheme;
@@ -67,6 +73,7 @@ namespace CMS
             builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
             builder.Services.AddScoped<ICreateUserService, CreateUserService>();
             builder.Services.AddScoped<IGetCurrentUserService, GetCurrentUserService>();
+
 
             var app = builder.Build();
 

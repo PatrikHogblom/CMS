@@ -22,6 +22,23 @@ namespace CMS.Services
             return await context.Contents.FirstOrDefaultAsync(c => c.ContentId == contentId);
         }
 
+        public async Task<List<Content>> GetAllContentsAsync()
+        {
+            await using var context = _dbContextFactory.CreateDbContext();
+            return await context.Contents.ToListAsync();
+        }
+
+        public async Task<List<Content>> GetContentsByWebPageIdAsync(int webPageId)
+        {
+            await using var context = _dbContextFactory.CreateDbContext();
+
+            // Fetching the contents for the given WebPageId and ordering them
+            return await context.Contents
+                .Where(c => c.WebPageId == webPageId)
+                .OrderBy(c => c.Order)
+                .ToListAsync();
+        }
+
         // Method to save new content to the database
         public async Task SaveContentAsync(Content content)
         {
@@ -34,6 +51,15 @@ namespace CMS.Services
                 throw new InvalidOperationException($"WebPageId {content.WebPageId} does not exist.");
             }
 
+            // Determine the current max Order for this WebPageId
+            var maxOrder = await context.Contents
+                .Where(c => c.WebPageId == content.WebPageId)
+                .MaxAsync(c => (int?)c.Order) ?? 0;
+
+            // Set the Order of the new content
+            content.Order = maxOrder + 1;
+
+            // Add the content with the new Order value
             context.Contents.Add(content);
 
             try
@@ -46,6 +72,7 @@ namespace CMS.Services
                 throw;
             }
         }
+
 
         // Method to update existing content in the database
         public async Task UpdateContentAsync(Content content)
@@ -74,6 +101,27 @@ namespace CMS.Services
                 throw;
             }
         }
+        public async Task UpdateContentOrderAsync(List<Content> reorderedContents)
+        {
+            await using var context = _dbContextFactory.CreateDbContext();
+
+            for (int i = 0; i < reorderedContents.Count; i++)
+            {
+                reorderedContents[i].Order = i + 1;  // Set the new order, starting from 1
+                context.Contents.Update(reorderedContents[i]);
+            }
+
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                Console.WriteLine($"Error updating order: {ex.InnerException?.Message}");
+                throw;
+            }
+        }
+
     }
 
 }
