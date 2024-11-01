@@ -20,9 +20,9 @@
 <PageTitle>Register</PageTitle>
 <div class="register-page">
 
-<h1 class="spaced-heading">Register</h1>
+<h1>Register</h1>
 
-<div class="row">
+<div class="row pb-4">
     <div class="col-md-4">
         <StatusMessage Message="@Message" />
         <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
@@ -71,14 +71,14 @@
             </div>
         </EditForm>
     </div>
-    <div class="col-md-6 col-md-offset-2">
+   @*  <div class="col-md-6 col-md-offset-2">
         <section>
             <div class="box1">
                 <h1>HACKER HEROES</h1>
                 <h1>CMS</h1>
             </div>
         </section>
-    </div>
+    </div> *@
 </div>
 </div>
 
